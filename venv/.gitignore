@@ -1,0 +1,16 @@
+# created by virtualenv automatically
+# venv
+.venv/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# OS
+.DS_Store
+
+# data and models created locally
+data/raw/
+data/processed/
+models/
+visuals/
+
