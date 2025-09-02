@@ -96,32 +96,66 @@ with tab_one:
             st.error(str(e))
 
 with tab_batch:
-    st.write("Upload a CSV with a `narrative` column. Optional `hf_label` is kept as `hf_label_true`.")
+    st.write("Upload a CSV with a `narrative` column. If missing, choose an alternate text column.")
     file = st.file_uploader("CSV file", type=["csv"])
+
     if file is not None:
-        df = pd.read_csv(file)
+        # Try reading with a robust header (ASRS often puts the real header on line 2)
+        try:
+            df = pd.read_csv(file, header=1, engine="python", on_bad_lines="skip")
+        except Exception:
+            file.seek(0)
+            df = pd.read_csv(file, engine="python", on_bad_lines="skip")
+
+        # Deduplicate header names
+        seen = {}
+        newcols = []
+        for c in df.columns:
+            seen[c] = seen.get(c, 0) + 1
+            newcols.append(c if seen[c] == 1 else f"{c}_{seen[c]}")
+        df.columns = newcols
+
+        # Find candidate text columns
+        text_cols = [c for c in df.columns if any(k in c.lower() for k in ["narrative", "callback", "synopsis"])]
+
+        # If no 'narrative', let the user pick one
         if "narrative" not in df.columns:
-            st.error("CSV must contain a 'narrative' column.")
-        else:
-            try:
-                pipe, _, _ = load_model()
-                probs = pipe.predict_proba(df["narrative"])[:, 1]
-                labels = (probs >= threshold).astype(int)
-                out = df.copy()
-                if "hf_label" in out.columns:
-                    out = out.rename(columns={"hf_label": "hf_label_true"})
-                out["hf_prob_pred"] = probs
-                out["hf_label_pred"] = labels
-                st.dataframe(out.head(20))
-                csv_bytes = out.to_csv(index=False).encode("utf-8")
-                st.download_button(
-                    "Download predictions CSV",
-                    data=csv_bytes,
-                    file_name="predictions.csv",
-                    mime="text/csv",
-                )
-            except FileNotFoundError as e:
-                st.error(str(e))
+            if text_cols:
+                choice = st.selectbox("Pick narrative column", text_cols, index=0)
+                df["narrative"] = df[choice].astype(str)
+                st.info(f"Using `{choice}` as the narrative column.")
+            else:
+                st.error("CSV must contain a `narrative`, `callback`, or `synopsis` column.")
+                st.stop()
+
+        # Load the model - catch missing model nicely
+        try:
+            pipe, _, _ = load_model()
+        except FileNotFoundError as e:
+            st.error(str(e))
+            st.stop()
+
+        if df["narrative"].isna().all():
+            st.error("The chosen narrative column is empty.")
+            st.stop()
+
+        # Score
+        probs = pipe.predict_proba(df["narrative"].astype(str))[:, 1]
+        labels = (probs >= threshold).astype(int)
+
+        out = df.copy()
+        if "hf_label" in out.columns:
+            out = out.rename(columns={"hf_label": "hf_label_true"})
+        out["hf_prob_pred"] = probs
+        out["hf_label_pred"] = labels
+
+        st.dataframe(out.head(20))
+        st.download_button(
+            "Download predictions CSV",
+            data=out.to_csv(index=False).encode("utf-8"),
+            file_name="predictions.csv",
+            mime="text/csv",
+        )
 
 with tab_viz:
     st.write("Training visuals if available:")
