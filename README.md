@@ -6,6 +6,10 @@ A small ML app that scores aviation incident narratives for human-factors risk u
 
 Safety teams read a lot of incident reports. Manual triage is slow and inconsistent. This app ranks new reports by estimated human-factors risk so analysts start with the highest-risk items.
 
+## Supported Python version
+
+This project targets **Python 3.11 only**. It was built and tested with 3.11.x.
+
 ## Features
 
 - Train a baseline model and save artifacts  
