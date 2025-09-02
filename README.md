@@ -55,9 +55,34 @@ This will:
 
 * do a demo single prediction
 
+## 3) Launch the GUI
+
+First train the model (if you have not already done so) so the app can load it:
+
+```bash
+python main.py train
+```
+Start the GUI:
+```bash
+streamlit run app.py
+```
+
+In the browser:
+
+* Use Single narrative to paste text and get a probability and label.
+
+* Use Batch CSV to upload a file with a narrative column.
+
+* Use Visuals to see the training confusion matrix, PR curve, and calibration curve.
+
+Example batch input columns:
+
+* required: narrative
+
+* optional: report_id, hf_label (kept as hf_label_true in output), and any other columns you want preserved.
 ---
 
-## 3) Common commands
+## 4) Common commands
 
 Train the model:
 ```python
@@ -82,7 +107,7 @@ python main.py predict-batch --in data/raw/asrs_sample.csv --out data/processed/
 ---
 
 
-## 4) What artifacts you should see
+## 5) What artifacts you should see
 
 Metrics file:
 ```
@@ -108,7 +133,7 @@ data/processed/predictions.csv
 
 Note: If your input CSV already has a true label column named *hf_label*, the batch script will keep it as *hf_label_true* and add *hf_prob_pred* and *hf_label_pred*.
 
-## 5) Data
+## 6) Data
 
 For development the project uses a tiny synthetic sample created by:
 ```bash
@@ -122,7 +147,7 @@ report_id, narrative, hf_label
 
 *hf_label* is optional for batch scoring but required for training and evaluation.
 
-## 6) Troubleshooting
+## 7) Troubleshooting
 
 Interpreter issues in an IDE:
 ```
@@ -148,7 +173,7 @@ Your input CSV must have a column named narrative
 If it also has hf_label it will be preserved as hf_label_true
 Predictions will be written as hf_prob_pred and hf_label_pred
 ```
-## 7) Requirements
+## 8) Requirements
 
 Pinned versions:
 ```
