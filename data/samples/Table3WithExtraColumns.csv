@@ -1,0 +1,6 @@
+report_id,date,airport,phase,narrative,hf_label
+3001,2025-08-08,KDEN,Taxi,Headset volume low, missed ground instruction, took wrong turn.,1
+3002,2025-08-12,KLAX,Climb,After late night duty, PF felt drowsy, PM caught altitude deviation.,1
+3003,2025-08-15,KSEA,Cruise,Routine ops, no abnormalities.,0
+3004,2025-08-18,KDFW,Approach,Briefing rushed due to runway change and congested frequency.,1
+3005,2025-08-22,KJFK,Landing,Stabilized approach with normal callouts.,0

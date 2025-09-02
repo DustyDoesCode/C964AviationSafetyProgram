@@ -20,6 +20,13 @@ This project targets **Python 3.11 only**. It was built and tested with 3.11.x.
 - One-command quickstart through `main.py`
 
 ---
+### Sample files
+You can test quickly with the sample CSVs in `data/samples/`:
+- `hf_gui_examples_labeled.csv`
+- `hf_gui_examples_unlabeled.csv`
+- `hf_batch_mixed_extra_cols.csv`
+
+Go to Batch CSV, upload a file, and review the results. If prompted to pick a narrative column, choose the one with text.
 
 ## 1) Setup
 
@@ -135,7 +142,7 @@ Batch results:
 data/processed/predictions.csv
 ```
 
-Note: If your input CSV already has a true label column named *hf_label*, the batch script will keep it as *hf_label_true* and add *hf_prob_pred* and *hf_label_pred*.
+Note: If your input CSV already has a true label column named `hf_label`, the batch script will keep it as `hf_label_true` and add `hf_prob_pred` and `hf_label_pred`.
 
 ## 6) Data
 
@@ -149,7 +156,7 @@ Replace data/raw/asrs_sample.csv with your ASRS export that includes columns:
 report_id, narrative, hf_label
 ```
 
-*hf_label* is optional for batch scoring but required for training and evaluation.
+`hf_label` is optional for batch scoring but required for training and evaluation.
 
 ## 7) Troubleshooting
 
