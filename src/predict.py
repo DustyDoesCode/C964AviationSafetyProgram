@@ -1,3 +1,22 @@
+"""
+Simple CLI to score a narrative with the saved model and show top word effects.
+
+Reads:
+  models/baseline_logreg.joblib   (produced by train.py)
+
+Usage examples:
+  python src/predict.py --text "Crew reported fatigue and high workload."
+  python src/predict.py --text "Routine maintenance replaced a worn tire."
+
+Options:
+  --threshold FLOAT   decision threshold for HF=1 (default 0.5)
+
+Output:
+  - Predicted label (0 or 1) and probability for HF.
+  - Top words pushing the decision toward HF and away from HF.
+"""
+
+
 from pathlib import Path
 import argparse
 import numpy as np
