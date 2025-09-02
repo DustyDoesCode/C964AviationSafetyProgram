@@ -157,6 +157,7 @@ numpy==1.26.4
 scikit-learn==1.5.1
 matplotlib==3.8.4
 joblib==1.4.2
+streamlit==1.36.0
 ```
 
 Install all with:
