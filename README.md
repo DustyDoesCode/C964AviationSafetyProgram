@@ -22,9 +22,9 @@ This project targets **Python 3.11 only**. It was built and tested with 3.11.x.
 ---
 ### Sample files
 You can test quickly with the sample CSVs in `data/samples/`:
-- `hf_gui_examples_labeled.csv`
-- `hf_gui_examples_unlabeled.csv`
-- `hf_batch_mixed_extra_cols.csv`
+- `Table1WithLabels.csv`
+- `Table2NoLabels.csv`
+- `Table3WithExtraColumns.csv`
 
 Go to Batch CSV, upload a file, and review the results. If prompted to pick a narrative column, choose the one with text.
 
