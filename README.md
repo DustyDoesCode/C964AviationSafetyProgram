@@ -31,14 +31,7 @@ Go to Batch CSV, upload a file, and review the results. If prompted to pick a na
 ## 1) Setup
 
 ### Mac or Linux
-
-```bash
-python3.11 -m venv .venv
-source .venv/bin/activate
-pip install -U pip
-pip install -r requirements.txt
-```
-### macOS setup note
+### macOS setup note (when downloading .zip)
 Do not run the project from `Downloads`. Move it somewhere like `~/Desktop`.
 macOS may quarantine native libraries that come from a zip. Always:
 1) Clear quarantine attributes in the project,
@@ -56,6 +49,13 @@ xattr -lr . | grep -i quarantine || echo "no quarantine flags found"
 2) Create a fresh virtual environment,
 3) Install from `requirements.txt` (never ship or reuse a `.venv`).
 
+
+```bash
+python3.11 -m venv .venv
+source .venv/bin/activate
+pip install -U pip
+pip install -r requirements.txt
+```
 ### Windows
 
 ```bash
