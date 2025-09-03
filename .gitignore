@@ -16,3 +16,5 @@ visuals/
 # ignore all raw data by default except the one we ship
 data/raw/*
 !data/raw/ASRS_DBOnline.csv
+.venv/
+venv/
