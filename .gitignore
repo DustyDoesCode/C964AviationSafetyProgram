@@ -18,3 +18,4 @@ data/raw/*
 !data/raw/ASRS_DBOnline.csv
 .venv/
 venv/
+.venv/
