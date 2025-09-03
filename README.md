@@ -38,6 +38,24 @@ source .venv/bin/activate
 pip install -U pip
 pip install -r requirements.txt
 ```
+### macOS setup note
+Do not run the project from `Downloads`. Move it somewhere like `~/Desktop`.
+macOS may quarantine native libraries that come from a zip. Always:
+1) Clear quarantine attributes in the project,
+```bash
+# 1) go to your project folder (change the path to yours)
+cd ~/Desktop
+
+# 2) remove quarantine attributes recursively
+xattr -dr com.apple.quarantine .
+
+# 3) optional: confirm nothing in the folder is still quarantined
+#   (no output means you are clear)
+xattr -lr . | grep -i quarantine || echo "no quarantine flags found"
+```
+2) Create a fresh virtual environment,
+3) Install from `requirements.txt` (never ship or reuse a `.venv`).
+
 ### Windows
 
 ```bash
