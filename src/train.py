@@ -22,9 +22,13 @@ Notes:
   - Logistic Regression has interpretable word weights for simple explanations.
 """
 from pathlib import Path
+import os
+import argparse
+
 import joblib
 import numpy as np
 import matplotlib.pyplot as plt
+import pandas as pd
 
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
@@ -38,14 +42,16 @@ from sklearn.metrics import (
 )
 from sklearn.calibration import calibration_curve
 
-from utils import load_dataset
+from utils import load_asrs_dataset, infer_hf_label
 
 ROOT = Path(__file__).resolve().parents[1]
-DATA = ROOT / "data" / "raw" / "asrs_sample.csv"
 MODELS_DIR = ROOT / "models"
 VIS_DIR = ROOT / "visuals"
 
+# default training data: env var overrides, else sample file
+DEFAULT_DATA = os.getenv("TRAIN_DATA", str(ROOT / "data" / "raw" / "ASRS_DBOnline.csv"))
 RANDOM_SEED = 42
+
 
 def plot_confusion_matrix(cm: np.ndarray, out_path: Path, labels=("Not HF", "HF")):
     fig, ax = plt.subplots(figsize=(4, 4))
@@ -65,20 +71,22 @@ def plot_confusion_matrix(cm: np.ndarray, out_path: Path, labels=("Not HF", "HF"
             ax.text(j, i, cm[i, j], ha="center", va="center")
     fig.tight_layout()
     out_path.parent.mkdir(parents=True, exist_ok=True)
-    fig.savefig(out_path)
+    fig.savefig(out_path, dpi=150)
     plt.close(fig)
 
-def plot_pr_curve(prec, rec, ap: float, out_path: Path):
+
+def plot_pr_curve(precision, recall, ap: float, out_path: Path):
     fig, ax = plt.subplots(figsize=(4, 4))
-    ax.plot(rec, prec, label=f"Model (AP={ap:.3f})")
+    ax.plot(recall, precision, label=f"Model (AP={ap:.3f})")
     ax.set_xlabel("Recall")
     ax.set_ylabel("Precision")
     ax.set_title("Precision–Recall Curve")
     ax.legend(loc="lower left")
     ax.grid(True, alpha=0.3)
     fig.tight_layout()
-    fig.savefig(out_path)
+    fig.savefig(out_path, dpi=150)
     plt.close(fig)
+
 
 def plot_calibration_curve(y_true, y_prob, out_path: Path, n_bins: int = 10):
     prob_true, prob_pred = calibration_curve(y_true, y_prob, n_bins=n_bins, strategy="quantile")
@@ -91,44 +99,59 @@ def plot_calibration_curve(y_true, y_prob, out_path: Path, n_bins: int = 10):
     ax.legend()
     ax.grid(True, alpha=0.3)
     fig.tight_layout()
-    fig.savefig(out_path)
+    fig.savefig(out_path, dpi=150)
     plt.close(fig)
 
-def main():
-    print(f"Loading: {DATA}")
-    df = load_dataset(str(DATA))
 
-    X = df["narrative"].values
-    y = df["hf_label"].values
+def main(data_path: str | None = None):
+    data_path = data_path or DEFAULT_DATA
+    data_path = str(Path(data_path))
+    print(f"Loading: {data_path}")
+
+    # Load ASRS CSV with double-header handling and text normalization
+    df = load_asrs_dataset(data_path)
+
+    # Auto-create label if needed
+    if "hf_label" not in df.columns:
+        print("No hf_label found. Inferring labels from ASRS coded fields...")
+        df = infer_hf_label(df)
+        print("Label counts:\n", df["hf_label"].value_counts(dropna=False))
+
+    X = df["narrative"].astype(str).values
+    y = df["hf_label"].astype(int).values
 
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.25, stratify=y, random_state=RANDOM_SEED
     )
 
-    pipe = Pipeline(steps=[
-        ("tfidf", TfidfVectorizer(max_features=5000, ngram_range=(1, 2))),
-        ("logreg", LogisticRegression(
-            class_weight="balanced",
-            max_iter=1000,
-            n_jobs=None,
-            solver="liblinear"
-        ))
-    ])
+    pipe = Pipeline(
+        steps=[
+            ("tfidf", TfidfVectorizer(max_features=5000, ngram_range=(1, 2))),
+            (
+                "logreg",
+                LogisticRegression(
+                    class_weight="balanced",
+                    max_iter=1000,
+                    solver="liblinear",
+                ),
+            ),
+        ]
+    )
 
     pipe.fit(X_train, y_train)
 
-    # Hard labels and probabilities
+    # Predictions
     y_pred = pipe.predict(X_test)
     y_prob = pipe.predict_proba(X_test)[:, 1]
 
-    # Threshold metrics (default 0.5 used by predict)
+    # Threshold metrics at 0.5 (predict default)
     precision, recall, f1, _ = precision_recall_fscore_support(
         y_test, y_pred, average="binary", pos_label=1, zero_division=0
     )
     cm = confusion_matrix(y_test, y_pred, labels=[0, 1])
 
     # Curve-based metrics
-    rec_curve, prec_curve, _ = precision_recall_curve(y_test, y_prob)
+    prec_curve, rec_curve, _ = precision_recall_curve(y_test, y_prob)  # precision first, then recall
     ap = average_precision_score(y_test, y_prob)
 
     MODELS_DIR.mkdir(parents=True, exist_ok=True)
@@ -154,7 +177,20 @@ def main():
 
     print(f"Saved model   → {model_path}")
     print(f"Saved metrics → {metrics_path}")
-    print(f"Saved images  → {VIS_DIR / 'confusion_matrix.png'}, {VIS_DIR / 'pr_curve.png'}, {VIS_DIR / 'calibration_curve.png'}")
+    print(
+        "Saved images  →",
+        VIS_DIR / "confusion_matrix.png",
+        VIS_DIR / "pr_curve.png",
+        VIS_DIR / "calibration_curve.png",
+        )
+
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--data",
+        default=DEFAULT_DATA,
+        help="Path to training CSV (or set TRAIN_DATA env var)",
+    )
+    args = parser.parse_args()
+    main(args.data)

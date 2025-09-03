@@ -9,8 +9,10 @@
 .DS_Store
 
 # data and models created locally
-data/raw/
 data/processed/
 models/
 visuals/
 
+# ignore all raw data by default except the one we ship
+data/raw/*
+!data/raw/ASRS_DBOnline.csv
