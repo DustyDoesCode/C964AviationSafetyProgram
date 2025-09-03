@@ -22,6 +22,7 @@ Notes:
   - Logistic Regression has interpretable word weights for simple explanations.
 """
 from pathlib import Path
+from time import perf_counter
 import os
 import argparse
 
@@ -152,7 +153,19 @@ def main(data_path: str | None = None):
     y_prob = pipe.predict_proba(X_test)[:, 1]
     p_at_20 = precision_at_k(y_test, y_prob, k=20)
 
-    # Threshold metrics at 0.5 (predict default)
+    # --- mean inference time per narrative (CPU) ---
+    # warm-up so the first call compilation/caching does not skew timing
+    _ = pipe.predict_proba(X_test[:25])
+
+    start = perf_counter()
+    _ = pipe.predict_proba(X_test)          # batch over the test set
+    elapsed = perf_counter() - start
+
+    mean_ms = (elapsed / len(X_test)) * 1000.0
+    print(f"Mean inference time per narrative (CPU): {mean_ms:.2f} ms")
+
+
+# Threshold metrics at 0.5 (predict default)
     precision, recall, f1, _ = precision_recall_fscore_support(
         y_test, y_pred, average="binary", pos_label=1, zero_division=0
     )
@@ -177,6 +190,7 @@ def main(data_path: str | None = None):
         f.write(f"f1:        {f1:.3f}\n")
         f.write(f"pr_auc:    {ap:.3f}\n")
         f.write(f"precision@20: {p_at_20:.3f}\n")
+        f.write(f"mean_inference_ms: {mean_ms:.2f}\n")
         f.write(f"confusion_matrix:\n{cm}\n")
 
     # Save images
