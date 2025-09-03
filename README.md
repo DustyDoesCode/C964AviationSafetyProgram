@@ -58,7 +58,7 @@ This will:
 
 * generate a tiny sample CSV if missing at data/raw/asrs_sample.csv
 
-* run EDA and save two pictures in visuals/
+* run EDA and save multiple pictures in visuals/
 
 * train the model and save models/baseline_logreg.joblib and models/metrics.txt
 
@@ -68,7 +68,7 @@ This will:
 
 ## 3) Launch the GUI
 
-First train the model (if you have not already done so) so the app can load it:
+First train the model (if you have not already done so) so the app can load it, this will train the model using the included ASRS_DBOnline.csv:
 
 ```bash
 python main.py train

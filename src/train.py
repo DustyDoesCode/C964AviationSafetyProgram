@@ -52,6 +52,13 @@ VIS_DIR = ROOT / "visuals"
 DEFAULT_DATA = os.getenv("TRAIN_DATA", str(ROOT / "data" / "raw" / "ASRS_DBOnline.csv"))
 RANDOM_SEED = 42
 
+def precision_at_k(y_true, y_score, k=20):
+    import numpy as np
+    n = min(k, len(y_score))
+    idx = np.argsort(y_score)[::-1][:n]  # top-n by prob
+    y_true = np.asarray(y_true)
+    return float((y_true[idx] == 1).mean())
+
 
 def plot_confusion_matrix(cm: np.ndarray, out_path: Path, labels=("Not HF", "HF")):
     fig, ax = plt.subplots(figsize=(4, 4))
@@ -143,6 +150,7 @@ def main(data_path: str | None = None):
     # Predictions
     y_pred = pipe.predict(X_test)
     y_prob = pipe.predict_proba(X_test)[:, 1]
+    p_at_20 = precision_at_k(y_test, y_prob, k=20)
 
     # Threshold metrics at 0.5 (predict default)
     precision, recall, f1, _ = precision_recall_fscore_support(
@@ -168,6 +176,7 @@ def main(data_path: str | None = None):
         f.write(f"recall:    {recall:.3f}\n")
         f.write(f"f1:        {f1:.3f}\n")
         f.write(f"pr_auc:    {ap:.3f}\n")
+        f.write(f"precision@20: {p_at_20:.3f}\n")
         f.write(f"confusion_matrix:\n{cm}\n")
 
     # Save images
